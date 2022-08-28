@@ -41,6 +41,13 @@ public class LiveVarTest {
     public void testGaussianElimination() {
         testLV("GaussianElimination");
     }
+
+    @Test
+    public void testDeadLoop() {
+        testLV("DeadLoop");
+    }
+
+
     @Test
     public void testAssign() {
         testLV("Assign");

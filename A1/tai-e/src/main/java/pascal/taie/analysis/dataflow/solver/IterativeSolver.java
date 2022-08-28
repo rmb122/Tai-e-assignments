@@ -46,6 +46,9 @@ class IterativeSolver<Node, Fact> extends Solver<Node, Fact> {
 
         LinkedList<Node> queue = new LinkedList<>();
 
+        // 如果采用 BFS 等算法, 从 exit 节点出发, 碰到 while(true) 死循环, 会导致寻找不到可用的前驱
+        // 所以还是用 work list 吧
+
         for (Node i : cfg) {
             queue.add(i);
         }

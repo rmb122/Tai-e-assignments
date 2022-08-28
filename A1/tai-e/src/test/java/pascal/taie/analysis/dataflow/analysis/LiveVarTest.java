@@ -33,6 +33,15 @@ public class LiveVarTest {
     }
 
     @Test
+    public void testAnnoInner() {
+        testLV("AnonInner");
+    }
+
+    @Test
+    public void testGaussianElimination() {
+        testLV("GaussianElimination");
+    }
+    @Test
     public void testAssign() {
         testLV("Assign");
     }

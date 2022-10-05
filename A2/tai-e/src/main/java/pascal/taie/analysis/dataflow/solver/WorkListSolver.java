@@ -56,7 +56,7 @@ class WorkListSolver<Node, Fact> extends Solver<Node, Fact> {
             Fact inFact = result.getInFact(current);
 
             cfg.getPredsOf(current).forEach(node -> {
-                this.analysis.meetInto(inFact, result.getOutFact(node));
+                this.analysis.meetInto(result.getOutFact(node), inFact);
             });
 
             Fact outFact = result.getOutFact(current);

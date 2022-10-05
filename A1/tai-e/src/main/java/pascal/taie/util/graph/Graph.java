@@ -67,7 +67,8 @@ public interface Graph<N> extends Iterable<N> {
      */
     default Set<? extends Edge<N>> getInEdgesOf(N node) {
         return Views.toMappedSet(getPredsOf(node),
-                pred -> new AbstractEdge<N>(pred, node) {});
+                pred -> new AbstractEdge<N>(pred, node) {
+                });
     }
 
     /**
@@ -82,7 +83,8 @@ public interface Graph<N> extends Iterable<N> {
      */
     default Set<? extends Edge<N>> getOutEdgesOf(N node) {
         return Views.toMappedSet(getSuccsOf(node),
-                succ -> new AbstractEdge<N>(node, succ) {});
+                succ -> new AbstractEdge<N>(node, succ) {
+                });
     }
 
     /**

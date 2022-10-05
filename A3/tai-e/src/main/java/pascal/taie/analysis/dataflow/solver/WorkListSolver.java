@@ -26,6 +26,8 @@ import pascal.taie.analysis.dataflow.analysis.DataflowAnalysis;
 import pascal.taie.analysis.dataflow.fact.DataflowResult;
 import pascal.taie.analysis.graph.cfg.CFG;
 
+import java.util.HashSet;
+
 class WorkListSolver<Node, Fact> extends Solver<Node, Fact> {
 
     WorkListSolver(DataflowAnalysis<Node, Fact> analysis) {
@@ -35,10 +37,58 @@ class WorkListSolver<Node, Fact> extends Solver<Node, Fact> {
     @Override
     protected void doSolveForward(CFG<Node> cfg, DataflowResult<Node, Fact> result) {
         // TODO - finish me
+        HashSet<Node> workList = new HashSet<>();
+        Node entry = cfg.getEntry();
+
+        for (Node node : cfg) {
+            if (!node.equals(entry)) {
+                workList.add(node);
+            }
+        }
+
+        while (!workList.isEmpty()) {
+            Node current = workList.iterator().next();
+            workList.remove(current);
+
+            Fact inFact = result.getInFact(current);
+
+            cfg.getPredsOf(current).forEach(node -> {
+                this.analysis.meetInto(result.getOutFact(node), inFact);
+            });
+
+            Fact outFact = result.getOutFact(current);
+            if (this.analysis.transferNode(current, inFact, outFact)) {
+                workList.addAll(cfg.getSuccsOf(current));
+            }
+        }
     }
 
     @Override
     protected void doSolveBackward(CFG<Node> cfg, DataflowResult<Node, Fact> result) {
         // TODO - finish me
+        HashSet<Node> workList = new HashSet<>();
+        Node exit = cfg.getExit();
+
+        for (Node node : cfg) {
+            if (!node.equals(exit)) {
+                workList.add(node);
+            }
+        }
+
+        while (!workList.isEmpty()) {
+            Node current = workList.iterator().next();
+            workList.remove(current);
+
+            Fact outFact = result.getOutFact(current);
+
+            cfg.getSuccsOf(current).forEach(node -> {
+                this.analysis.meetInto(result.getInFact(node), outFact);
+            });
+
+            Fact inFact = result.getInFact(current);
+            if (this.analysis.transferNode(current, inFact, outFact)) {
+                workList.addAll(cfg.getPredsOf(current));
+            }
+        }
     }
 }

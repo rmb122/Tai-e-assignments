@@ -68,8 +68,8 @@ public class ConstantPropagation extends
     @Override
     public void meetInto(CPFact fact, CPFact target) {
         // TODO - finish me
-        target.forEach((k, v) -> {
-            fact.update(k, this.meetValue(fact.get(k), v));
+        fact.forEach((k, v) -> {
+            target.update(k, this.meetValue(target.get(k), v));
         });
     }
 

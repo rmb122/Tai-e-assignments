@@ -25,13 +25,8 @@ package pascal.taie.analysis.dataflow.analysis;
 import pascal.taie.analysis.dataflow.fact.SetFact;
 import pascal.taie.analysis.graph.cfg.CFG;
 import pascal.taie.config.AnalysisConfig;
-import pascal.taie.ir.exp.ArrayAccess;
-import pascal.taie.ir.exp.InstanceFieldAccess;
-import pascal.taie.ir.exp.LValue;
 import pascal.taie.ir.exp.Var;
 import pascal.taie.ir.stmt.Stmt;
-
-import java.util.Optional;
 
 /**
  * Implementation of classic live variable analysis.
@@ -68,12 +63,6 @@ public class LiveVariableAnalysis extends
         target.union(fact);
     }
 
-    private void removeIfContains(SetFact<Var> setFact, Var var) {
-        if (setFact.contains(var)) {
-            setFact.remove(var);
-        }
-    }
-
     @Override
     public boolean transferNode(Stmt stmt, SetFact<Var> in, SetFact<Var> out) {
         // TODO - finish me
@@ -81,19 +70,11 @@ public class LiveVariableAnalysis extends
         SetFact<Var> inCopy = in.copy();
         in.set(out);
 
-        Optional<LValue> lValueOptional = stmt.getDef();
-
-        if (lValueOptional.isPresent()) {
-            LValue lValue = lValueOptional.get();
-            if (lValue instanceof ArrayAccess) {
-                removeIfContains(in, ((ArrayAccess) lValue).getBase());
-                removeIfContains(in, ((ArrayAccess) lValue).getIndex());
-            } else if (lValue instanceof Var) {
-                removeIfContains(in, (Var) lValue);
-            } else if (lValue instanceof InstanceFieldAccess) {
-                removeIfContains(in, ((InstanceFieldAccess) lValue).getBase());
+        stmt.getDef().ifPresent(lValue -> {
+            if (lValue instanceof Var) {
+                in.remove((Var) lValue);
             }
-        }
+        });
 
         stmt.getUses().forEach(use -> {
             if (use instanceof Var) {

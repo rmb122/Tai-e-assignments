@@ -24,11 +24,9 @@ package pascal.taie.analysis.dataflow.inter;
 
 import pascal.taie.analysis.dataflow.fact.DataflowResult;
 import pascal.taie.analysis.graph.icfg.ICFG;
-import pascal.taie.util.collection.SetQueue;
+import pascal.taie.ir.exp.FieldAccess;
 
-import java.util.Queue;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.*;
 
 /**
  * Solver for inter-procedural data-flow analysis.
@@ -43,7 +41,7 @@ class InterSolver<Method, Node, Fact> {
 
     private DataflowResult<Node, Fact> result;
 
-    private Queue<Node> workList;
+    private Set<Node> workList;
 
     InterSolver(InterDataflowAnalysis<Node, Fact> analysis,
                 ICFG<Method, Node> icfg) {
@@ -60,9 +58,71 @@ class InterSolver<Method, Node, Fact> {
 
     private void initialize() {
         // TODO - finish me
+        this.workList = new HashSet<>();
+
+        Node entryPoint = this.icfg.getEntryOf(this.getMainMethod(this.icfg));
+        this.result.setOutFact(entryPoint, this.analysis.newBoundaryFact(entryPoint));
+
+        for (Node node : this.icfg) {
+            if (node != entryPoint) {
+                this.result.setInFact(node, this.analysis.newInitialFact());
+                this.result.setOutFact(node, this.analysis.newInitialFact());
+            }
+        }
+    }
+
+    public ICFG<Method, Node> getICFG() {
+        return this.icfg;
+    }
+
+    public Fact getNodeOutFact(Node node) {
+        return this.result.getOutFact(node);
+    }
+
+    public Fact getNodeInFact(Node node) {
+        return this.result.getInFact(node);
+    }
+
+    private Method getMainMethod(ICFG<Method, Node> icfg) {
+        List<Method> methods = icfg.entryMethods().toList();
+        if (methods.size() != 1) {
+            throw new RuntimeException("Multiple entry point of icfg found");
+        }
+        return methods.get(0);
+    }
+
+    public Set<Node> getWorkList() {
+        return this.workList;
     }
 
     private void doSolve() {
         // TODO - finish me
+
+        Node entryPoint = this.icfg.getEntryOf(this.getMainMethod(this.icfg));
+
+        for (Node node : icfg) {
+            if (!node.equals(entryPoint)) {
+                workList.add(node);
+            }
+        }
+
+        while (!workList.isEmpty()) {
+            Node current = workList.iterator().next();
+            workList.remove(current);
+
+            Fact inFact = result.getInFact(current);
+
+            icfg.getInEdgesOf(current).forEach(inEdge -> {
+                Node sourceNode = inEdge.getSource();
+                Fact transferredOutFact = this.analysis.transferEdge(inEdge, this.result.getOutFact(sourceNode));
+                this.analysis.meetInto(transferredOutFact, inFact);
+            });
+
+            Fact outFact = result.getOutFact(current);
+
+            if (this.analysis.transferNode(current, inFact, outFact)) {
+                workList.addAll(icfg.getSuccsOf(current));
+            }
+        }
     }
 }
